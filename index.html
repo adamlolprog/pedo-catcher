@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Welcome</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      background-color: #000;
+      color: #0f0;
+      font-family: monospace;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      max-width: 800px;
+      padding: 40px;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    h1, h2 {
+      color: #0f0;
+      margin-bottom: 20px;
+    }
+
+    #countdown {
+      font-size: 2.5rem;
+      margin: 20px 0;
+    }
+
+    .section {
+      margin-top: 40px;
+    }
+
+    p {
+      margin: 6px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Welcome. The countdown has begun.</h1>
+    <div id="countdown">01:00:00</div>
+
+    <div id="info" class="section">
+      <h2>Your Device Info</h2>
+      <p><strong>Loading...</strong></p>
+    </div>
+  </div>
+
+  <script>
+    // --- COUNTDOWN TIMER ---
+    let startTime = localStorage.getItem('countdownStart');
+    if (!startTime) {
+      startTime = Date.now();
+      localStorage.setItem('countdownStart', startTime);
+    } else {
+      startTime = parseInt(startTime);
+    }
+
+    const countdownDuration = 60 * 60 * 1000;
+    const endTime = startTime + countdownDuration;
+
+    function updateCountdown() {
+      const now = Date.now();
+      const remaining = Math.max(0, endTime - now);
+      const hours = String(Math.floor(remaining / (1000 * 60 * 60))).padStart(2, '0');
+      const minutes = String(Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+      const seconds = String(Math.floor((remaining % (1000 * 60)) / 1000)).padStart(2, '0');
+      document.getElementById('countdown').textContent = `${hours}:${minutes}:${seconds}`;
+      if (remaining <= 0) {
+        clearInterval(timerInterval);
+        document.getElementById('countdown').textContent = "00:00:00";
+      }
+    }
+
+    const timerInterval = setInterval(updateCountdown, 1000);
+    updateCountdown();
+
+    // --- INFO SECTION ---
+    const info = document.getElementById('info');
+    const ua = navigator.userAgent;
+    const screenRes = `${window.screen.width} x ${window.screen.height}`;
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    info.innerHTML = `
+      <h2>Your Device Info</h2>
+      <p><strong>Browser:</strong> ${ua}</p>
+      <p><strong>Screen Resolution:</strong> ${screenRes}</p>
+      <p><strong>Timezone:</strong> ${timezone}</p>
+      <p><strong>Language:</strong> ${navigator.language}</p>
+      <p><strong>Cookies Enabled:</strong> ${navigator.cookieEnabled}</p>
+    `;
+
+    // --- IP + GEOLOCATION ---
+    fetch('https://ipapi.co/json/')
+      .then(res => res.json())
+      .then(data => {
+        const geoHTML = `
+          <div class="section">
+            <h2>Your Network Info</h2>
+            <p><strong>IP Address:</strong> ${data.ip}</p>
+            <p><strong>ISP:</strong> ${data.org}</p>
+            <p><strong>City:</strong> ${data.city}</p>
+            <p><strong>Region:</strong> ${data.region}</p>
+            <p><strong>Country:</strong> ${data.country_name}</p>
+            <p><strong>Coordinates:</strong> ${data.latitude}, ${data.longitude}</p>
+          </div>
+        `;
+        info.innerHTML += geoHTML;
+      });
+  </script>
+</body>
+</html>
